@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { FiUploadCloud } from "react-icons/fi"
-import { useSelector } from "react-redux"
 
 import "video-react/dist/video-react.css"
 import { Player } from "video-react"
@@ -16,7 +15,7 @@ export default function Upload({
   viewData = null,
   editData = null,
 }) {
-  const { course } = useSelector((state) => state.course)
+  // const { course } = useSelector((state) => state.course)
   const [selectedFile, setSelectedFile] = useState(null)
   const [previewSource, setPreviewSource] = useState(
     viewData ? viewData : editData ? editData : ""
@@ -30,6 +29,20 @@ export default function Upload({
       setSelectedFile(file)
     }
   }
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      previewFile(file);
+      setSelectedFile(file);
+    }
+  };
+
+  const handleBrowseClick = () => {
+    if (inputRef.current) {
+      inputRef.current.click();
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: !video
@@ -103,7 +116,7 @@ export default function Upload({
             </div>
             <p className="mt-2 max-w-[200px] text-center text-sm text-richblack-200">
               Drag and drop an {!video ? "image" : "video"}, or click to{" "}
-              <span className="font-semibold text-yellow-50">Browse</span> a
+              <span className="font-semibold text-yellow-50" onClick={handleBrowseClick}>Browse</span> a
               file
             </p>
             <ul className="mt-10 flex list-disc justify-between space-x-12 text-center  text-xs text-richblack-200">
@@ -112,6 +125,13 @@ export default function Upload({
             </ul>
           </div>
         )}
+      </div>
+      <div className="mt-2 hidden">
+        <input
+          type="file"
+          onChange={handleFileChange}
+          accept={!video ? "image/*" : "video/*"}
+        />
       </div>
       {errors[name] && (
         <span className="ml-2 text-xs tracking-wide text-pink-200">

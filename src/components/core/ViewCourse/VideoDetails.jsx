@@ -45,7 +45,7 @@ const VideoDetails = () => {
         setVideoEnded(false)
       }
     })()
-  }, [courseSectionData, courseEntireData, location.pathname])
+  }, [courseId,navigate, sectionId, subSectionId,courseSectionData, courseEntireData, location.pathname])
 
   // check if the lecture is the first video of the course
   const isFirstVideo = () => {

@@ -1,12 +1,13 @@
 import { toast } from "react-hot-toast"
 
-import { updateCompletedLectures } from "../../slices/viewCourseSlice"
+// import { updateCompletedLectures } from "../../slices/viewCourseSlice"
 // import { setLoading } from "../../slices/profileSlice";
 import { apiConnector } from "../apiConnector"
 import { courseEndpoints } from "../apis"
 
 const {
   COURSE_DETAILS_API,
+  CREATE_CATEGORIES_API,
   COURSE_CATEGORIES_API,
   GET_ALL_COURSE_API,
   CREATE_COURSE_API,
@@ -62,6 +63,28 @@ export const fetchCourseDetails = async (courseId) => {
   }
   toast.dismiss(toastId)
   //   dispatch(setLoading(false));
+  return result
+}
+// Create Course Category
+export const createCourseCategory = async (name, token) => {
+  let result = null
+  const toastId = toast.loading("Loading...")
+  try {
+    const response = await apiConnector("POST", CREATE_CATEGORIES_API, {name}, {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    })
+    console.log("CREATE COURSE CATEGORY API RESPONSE............", response)
+    if (!response?.data?.success) {
+      throw new Error("Could Not Create Course Category")
+    }
+    toast.success("Course Category Added Successfully")
+    result = response
+  } catch (error) {
+    console.log("CREATE COURSE CATEGORY API ERROR............", error)
+    toast.error(error.message)
+  }
+  toast.dismiss(toastId)
   return result
 }
 

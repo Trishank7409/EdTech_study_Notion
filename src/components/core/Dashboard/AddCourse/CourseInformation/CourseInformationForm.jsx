@@ -4,8 +4,10 @@ import { toast } from "react-hot-toast"
 import { HiOutlineCurrencyRupee } from "react-icons/hi"
 import { MdNavigateNext } from "react-icons/md"
 import { useDispatch, useSelector } from "react-redux"
+import CreatableSelect from 'react-select/creatable';
 
 import {
+  createCourseCategory,
   addCourseDetails,
   editCourseDetails,
   fetchCourseCategories,
@@ -31,13 +33,14 @@ export default function CourseInformationForm() {
   const { course, editCourse } = useSelector((state) => state.course)
   const [loading, setLoading] = useState(false)
   const [courseCategories, setCourseCategories] = useState([])
+  const [seletedCategory, setSelectedCategory]= useState()
 
   useEffect(() => {
     const getCategories = async () => {
       setLoading(true)
       const categories = await fetchCourseCategories()
       if (categories.length > 0) {
-        // console.log("categories", categories)
+        console.log("categories", categories)
         setCourseCategories(categories)
       }
       setLoading(false)
@@ -50,15 +53,33 @@ export default function CourseInformationForm() {
       setValue("coursePrice", course.price)
       setValue("courseTags", course.tag)
       setValue("courseBenefits", course.whatYouWillLearn)
-      setValue("courseCategory", course.category)
+      setValue("courseCategory", { label: course.category.name, value: course.category._id })
       setValue("courseRequirements", course.instructions)
       setValue("courseImage", course.thumbnail)
     }
     getCategories()
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [courseCategories?.length])
 
+  const handleCategoryCreate = async (inputValue) => {
+    const categoryResult = await createCourseCategory(inputValue, token);
+    console.log("categoryResult",categoryResult)
+    if (categoryResult) {
+      console.log ("input value", inputValue)
+      toast.success(`Category "${inputValue}" created successfully`);
+      const newCategory = {
+        label: inputValue,
+        value: categoryResult.data.data._id,
+      };
+      console.log("newcat",newCategory)
+      setCourseCategories((prevCategories) => [...prevCategories, newCategory]);
+      setValue("courseCategory", newCategory); // Set the created category as the selected value
+      setSelectedCategory(newCategory)
+    } else {
+      toast.error(`Failed to create category "${inputValue}"`);
+    }
+  };
   const isFormUpdated = () => {
     const currentValues = getValues()
     // console.log("changes after editing form values:", currentValues)
@@ -107,8 +128,8 @@ export default function CourseInformationForm() {
         if (currentValues.courseBenefits !== course.whatYouWillLearn) {
           formData.append("whatYouWillLearn", data.courseBenefits)
         }
-        if (currentValues.courseCategory._id !== course.category._id) {
-          formData.append("category", data.courseCategory)
+        if (currentValues.courseCategory !== course.category) {
+          formData.append("category", data.courseCategory.value);
         }
         if (
           currentValues.courseRequirements.toString() !==
@@ -142,7 +163,7 @@ export default function CourseInformationForm() {
     formData.append("price", data.coursePrice)
     formData.append("tag", JSON.stringify(data.courseTags))
     formData.append("whatYouWillLearn", data.courseBenefits)
-    formData.append("category", data.courseCategory)
+    formData.append("category", data.courseCategory.value);
     formData.append("status", COURSE_STATUS.DRAFT)
     formData.append("instructions", JSON.stringify(data.courseRequirements))
     formData.append("thumbnailImage", data.courseImage)
@@ -154,6 +175,7 @@ export default function CourseInformationForm() {
     }
     setLoading(false)
   }
+  console.log("hello",getValues("courseCategory"))
 
   return (
     <form
@@ -225,7 +247,7 @@ export default function CourseInformationForm() {
         <label className="text-sm text-richblack-5" htmlFor="courseCategory">
           Course Category <sup className="text-pink-200">*</sup>
         </label>
-        <select
+        {/* <select
           {...register("courseCategory", { required: true })}
           defaultValue=""
           id="courseCategory"
@@ -240,7 +262,23 @@ export default function CourseInformationForm() {
                 {category?.name}
               </option>
             ))}
-        </select>
+        </select> */}
+        <CreatableSelect
+  id="courseCategory"
+  options={courseCategories.map((category) => ({
+    label: category.name,
+    value: category._id,
+  }))}
+  onChange={(newValue) => {
+    console.log("new value",newValue)
+    setSelectedCategory(newValue)
+    setValue("courseCategory", newValue); // Set the value directly as an object
+  }}
+  onCreateOption={async (inputValue) => {
+    await handleCategoryCreate(inputValue); // Update the selected value to the newly created category
+  }}
+  value={seletedCategory} // Correctly set the value to either the selected option or null
+/>
         {errors.courseCategory && (
           <span className="ml-2 text-xs tracking-wide text-pink-200">
             Course Category is required
